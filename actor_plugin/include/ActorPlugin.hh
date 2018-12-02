@@ -38,8 +38,10 @@ namespace gazebo
 {
   class GAZEBO_VISIBLE ActorPlugin : public ModelPlugin
   {
-    /// \brief Constructor
+
     public: 
+
+	  /// \brief Constructor
       ActorPlugin();
 
       /// \brief Load the actor plugin.
@@ -47,24 +49,21 @@ namespace gazebo
       /// \param[in] _sdf Pointer to the plugin's SDF elements.
       virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
 
+    private:
+
       /// \brief Function that is called every update cycle.
       /// \param[in] _info Timing information
-    private: 
       void OnUpdate(const common::UpdateInfo &_info);
 
-      /// \brief A node use for ROS transport
-      // std::shared_ptr<ros::NodeHandle> rosNode;
-      ros::NodeHandlePtr rosNode;
+      bool SetPoseCallback(actor_services::SetPose::Request&, actor_services::SetPose::Response&);
 
-      ros::ServiceServer SetPoseService;
+      bool SetTargetCallback(actor_services::SetPose::Request&, actor_services::SetPose::Response&);
 
-      ros::ServiceServer SetTargetService;
-
-      ros::ServiceServer GetVelService;
-
-      // ros::ServiceClient GetVelClient;
+      bool GetVelCallback(actor_services::GetVel::Request&, actor_services::GetVel::Response&);
 
       ignition::math::Vector3d CallActorVelClient(std::string) const;
+
+      void CallPublisher(ignition::math::Vector3d, ignition::math::Vector3d, ignition::math::Vector3d, double);
 
       /// \brief Helper function to choose a new target location
       void ChooseNewTarget();
@@ -85,6 +84,23 @@ namespace gazebo
       /// Compute the obstacle force.
       ignition::math::Vector3d ObstacleForce(ignition::math::Pose3d &_pose) const;
 
+      void QueueThread();
+
+      // param list
+      void getROSParameters(const ros::NodeHandlePtr);
+
+      /// \brief A node use for ROS transport
+      // std::shared_ptr<ros::NodeHandle> rosNode;
+      ros::NodeHandlePtr ros_nh_ptr;
+
+      ros::ServiceServer set_pose_srv;
+
+      ros::ServiceServer set_target_srv;
+
+      ros::ServiceServer get_vel_srv;
+
+      // ros::ServiceClient GetVelClient;
+
       /// \brief Pointer to the parent actor.
       physics::ActorPtr actor;
 
@@ -98,7 +114,7 @@ namespace gazebo
       double yaw_vel;
 
       /// \brief Max velocity of the actor
-      double vMax;
+      double v_max;
 
       /// \brief The direction the actor will dodge in, will dodge right if true or by default
       //bool dodgingRight;
@@ -123,61 +139,42 @@ namespace gazebo
       //double animationFactor = 1.0;
 
       /// \brief Time of the last update.
-      common::Time lastUpdate;
+      common::Time last_update;
 
       /// \brief List of models to ignore. Used for vector field
-      std::vector<std::string> ignoreModels;
+      std::vector<std::string> ignored_models;
 
       /// \brief Custom trajectory info.
-      physics::TrajectoryInfoPtr trajectoryInfo;
+      physics::TrajectoryInfoPtr trajectory_info;
 
-
-      // ros::Publisher PosePublisher;
-      ros::Publisher VelPublisher;
-      bool SetPoseCallback(actor_services::SetPose::Request&,
-          actor_services::SetPose::Response&);
-
-      bool SetTargetCallback(actor_services::SetPose::Request&,
-          actor_services::SetPose::Response&);
-
-      bool GetVelCallback(actor_services::GetVel::Request&,
-          actor_services::GetVel::Response&);
-
-      void CallPublisher(
-          ignition::math::Vector3d, 
-          ignition::math::Vector3d, 
-          ignition::math::Vector3d, 
-          double);
+      ros::Publisher vel_publisher;
 
       /// \brief A ROS callbackqueue that helps process messages
-      ros::CallbackQueue rosQueue;
+      ros::CallbackQueue ros_cb_queue;
 
       /// \brief A thread the keeps running the rosQueue
-      std::thread rosQueueThread;
+      std::thread ros_queue_thread;
 
-      void QueueThread();
-
-      // param list
-      void get_ros_parameters(const ros::NodeHandlePtr);
-
-      double socialForceFactor;
-      double desiredForceFactor;
-      double obstacleForceFactor;
-      double maxSpeed;
-      double maxAngleUpdate;
-      bool dodgingRight;
+      double social_force_factor;
+      double desired_force_factor;
+      double obstacle_force_factor;
+      double max_speed;
+      double max_angle_update;
+      bool dodging_right;
       bool tb3_as_actor;
       std::string tb3_name;
-      double animationFactor;
-      double sf_lambdaImportance;
+      double animation_factor;
+      double sf_lambda_importance;
       double sf_gamma;
       double sf_n;
       double sf_n_prime;
-      double neighborRange;
+      double sf_distance_threshold;
+      double neighbor_range;
       double depth_fov;
       double fixed_actor_height; 
-      double sf_distance_th;
       double vel_param;
+
   };
+
 }
 #endif
