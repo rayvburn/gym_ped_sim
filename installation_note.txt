@@ -1,0 +1,8 @@
+## Gazebo8
+sudo apt-get install ros-kinetic-gazebo8*
+
+catkin build # will probably finish with errors
+catkin build data_collection
+catkin build
+
+## In turtlebot3_simulations/turtlebot3_fake you need to replace isnan with std::isnan if errors occur
